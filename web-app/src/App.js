@@ -3,6 +3,8 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import PacksPage from "./pages/PacksPage";
 import AdminPage from "./pages/AdminPage";
+import ProfilePage from "./pages/ProfilePage";
+import PlayPage from "./pages/PlayPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -17,6 +19,24 @@ function App() {
                     element={
                         <ProtectedRoute>
                             <PacksPage />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/profile"
+                    element={
+                        <ProtectedRoute>
+                            <ProfilePage />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/play/:packId"
+                    element={
+                        <ProtectedRoute>
+                            <PlayPage />
                         </ProtectedRoute>
                     }
                 />

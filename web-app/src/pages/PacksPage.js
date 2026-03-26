@@ -1,9 +1,14 @@
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 
 function PacksPage() {
     const email = localStorage.getItem("email");
     const role = localStorage.getItem("role");
     const navigate = useNavigate();
+
+    const [packs, setPacks] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
     const handleLogout = () => {
         localStorage.removeItem("token");
@@ -12,12 +17,24 @@ function PacksPage() {
         navigate("/");
     };
 
-    const samplePacks = [
-        { id: 1, name: "Animals Pack", description: "Guess animal-related words" },
-        { id: 2, name: "Food Pack", description: "Guess food-related words" },
-        { id: 3, name: "School Pack", description: "Guess school-related words" },
-        { id: 4, name: "Travel Pack", description: "Guess travel-related words" }
-    ];
+    useEffect(() => {
+        fetch("http://localhost:5021/api/Packs?random=true")
+            .then((res) => {
+                if (!res.ok) {
+                    throw new Error("Failed to fetch packs");
+                }
+                return res.json();
+            })
+            .then((data) => {
+                setPacks(data);
+                setLoading(false);
+            })
+            .catch((err) => {
+                console.error(err);
+                setError("Could not load packs from the server.");
+                setLoading(false);
+            });
+    }, []);
 
     const cardStyle = {
         backgroundColor: "white",
@@ -63,27 +80,36 @@ function PacksPage() {
                     </p>
                 </div>
 
-                <button
-                    onClick={handleLogout}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.opacity = "0.9";
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.opacity = "1";
-                    }}
-                    style={{
-                        padding: "10px 18px",
-                        border: "none",
-                        borderRadius: "10px",
-                        background: "linear-gradient(135deg, #ef4444, #dc2626)",
-                        color: "white",
-                        fontWeight: "700",
-                        cursor: "pointer",
-                        transition: "0.2s"
-                    }}
-                >
-                    Logout
-                </button>
+                <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                    <Link
+                        to="/profile"
+                        style={{
+                            padding: "10px 18px",
+                            borderRadius: "10px",
+                            backgroundColor: "white",
+                            color: "#1d4ed8",
+                            fontWeight: "700",
+                            textDecoration: "none"
+                        }}
+                    >
+                        Profile
+                    </Link>
+
+                    <button
+                        onClick={handleLogout}
+                        style={{
+                            padding: "10px 18px",
+                            border: "none",
+                            borderRadius: "10px",
+                            background: "linear-gradient(135deg, #ef4444, #dc2626)",
+                            color: "white",
+                            fontWeight: "700",
+                            cursor: "pointer"
+                        }}
+                    >
+                        Logout
+                    </button>
+                </div>
             </div>
 
             <div
@@ -104,53 +130,79 @@ function PacksPage() {
                 >
                     <h1 style={{ marginTop: 0, color: "#1e293b" }}>Choose a Pack</h1>
                     <p style={{ color: "#64748b" }}>
-                        Role: {role} • Select a pack and start playing
+                        Role: {role} • Select a randomized published pack and start playing
                     </p>
                 </div>
 
-                <div
-                    style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-                        gap: "20px"
-                    }}
-                >
-                    {samplePacks.map((pack) => (
-                        <div
-                            key={pack.id}
-                            style={cardStyle}
-                            onMouseEnter={hoverIn}
-                            onMouseLeave={hoverOut}
-                        >
-                            <h3 style={{ marginTop: 0, color: "#1e293b" }}>{pack.name}</h3>
-                            <p style={{ color: "#64748b", minHeight: "45px" }}>
-                                {pack.description}
-                            </p>
+                {loading && (
+                    <div
+                        style={{
+                            backgroundColor: "white",
+                            borderRadius: "16px",
+                            padding: "24px",
+                            boxShadow: "0 6px 18px rgba(0,0,0,0.05)"
+                        }}
+                    >
+                        Loading packs...
+                    </div>
+                )}
 
-                            <button
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.opacity = "0.9";
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.opacity = "1";
-                                }}
-                                style={{
-                                    width: "100%",
-                                    padding: "12px",
-                                    border: "none",
-                                    borderRadius: "10px",
-                                    background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
-                                    color: "white",
-                                    fontWeight: "700",
-                                    cursor: "pointer",
-                                    transition: "0.2s"
-                                }}
+                {error && (
+                    <div
+                        style={{
+                            backgroundColor: "white",
+                            borderRadius: "16px",
+                            padding: "24px",
+                            boxShadow: "0 6px 18px rgba(0,0,0,0.05)",
+                            color: "#dc2626"
+                        }}
+                    >
+                        {error}
+                    </div>
+                )}
+
+                {!loading && !error && (
+                    <div
+                        style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                            gap: "20px"
+                        }}
+                    >
+                        {packs.map((pack) => (
+                            <div
+                                key={pack.id}
+                                style={cardStyle}
+                                onMouseEnter={hoverIn}
+                                onMouseLeave={hoverOut}
                             >
-                                Play Pack
-                            </button>
-                        </div>
-                    ))}
-                </div>
+                                <h3 style={{ marginTop: 0, color: "#1e293b" }}>{pack.name}</h3>
+                                <p style={{ color: "#64748b", minHeight: "45px" }}>
+                                    {pack.description}
+                                </p>
+                                <p style={{ color: "#475569", marginBottom: "14px" }}>
+                                    Difficulty: {pack.difficulty}
+                                </p>
+
+                                <button
+                                    onClick={() => navigate(`/play/${pack.id}`)}
+                                    style={{
+                                        width: "100%",
+                                        padding: "12px",
+                                        border: "none",
+                                        borderRadius: "10px",
+                                        background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
+                                        color: "white",
+                                        fontWeight: "700",
+                                        cursor: "pointer"
+                                    }}
+                                >
+                                    Play Pack
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );

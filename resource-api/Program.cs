@@ -1,41 +1,91 @@
+using Microsoft.EntityFrameworkCore;
+using resource_api.Data;
+using resource_api.Models;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddDbContext<ResourceDbContext>(options =>
+    options.UseInMemoryDatabase("ResourceDb"));
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ResourceDbContext>();
+
+    if (!context.Packs.Any())
+    {
+        context.Packs.AddRange(
+            new Pack
+            {
+                Id = 1,
+                Name = "Animals Pack",
+                Description = "Guess animal-related words",
+                IsPublished = true,
+                Difficulty = 1
+            },
+            new Pack
+            {
+                Id = 2,
+                Name = "Food Pack",
+                Description = "Guess food-related words",
+                IsPublished = true,
+                Difficulty = 2
+            },
+            new Pack
+            {
+                Id = 3,
+                Name = "School Pack",
+                Description = "Guess school-related words",
+                IsPublished = true,
+                Difficulty = 1
+            },
+            new Pack
+            {
+                Id = 4,
+                Name = "Travel Pack",
+                Description = "Guess travel-related words",
+                IsPublished = true,
+                Difficulty = 2
+            },
+            new Pack
+            {
+                Id = 5,
+                Name = "Hidden Draft Pack",
+                Description = "This should not appear",
+                IsPublished = false,
+                Difficulty = 3
+            }
+        );
+
+        context.SaveChanges();
+    }
+}
+
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+app.UseCors("AllowReactApp");
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+app.UseAuthorization();
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+app.MapControllers();
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
