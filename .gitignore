@@ -1,0 +1,17 @@
+# .NET
+bin/
+obj/
+
+# Node
+node_modules/
+
+# React build
+build/
+
+# VS
+.vs/
+*.user
+*.suo
+
+# Environment
+.env
