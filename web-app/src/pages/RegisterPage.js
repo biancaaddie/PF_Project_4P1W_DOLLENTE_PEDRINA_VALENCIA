@@ -1,39 +1,36 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-function LoginPage() {
+function RegisterPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [role, setRole] = useState("player");
     const [result, setResult] = useState("");
     const navigate = useNavigate();
 
-    const handleLogin = async () => {
+    const handleRegister = async () => {
         try {
-            const response = await fetch("http://localhost:5151/api/Auth/login", {
+            const response = await fetch("http://localhost:5151/api/Auth/register", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
                     email,
-                    password
+                    password,
+                    role
                 })
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                localStorage.setItem("token", data.token);
-                localStorage.setItem("email", data.email);
-                localStorage.setItem("role", data.role);
-
-                if (data.role === "admin") {
-                    navigate("/admin");
-                } else {
-                    navigate("/packs");
-                }
+                setResult("Registration successful! Redirecting to login...");
+                setTimeout(() => {
+                    navigate("/");
+                }, 1200);
             } else {
-                setResult(data.message || "Login failed");
+                setResult(data.message || "Registration failed");
             }
         } catch (error) {
             setResult("Error connecting to server");
@@ -54,7 +51,7 @@ function LoginPage() {
             <div
                 style={{
                     width: "100%",
-                    maxWidth: "420px",
+                    maxWidth: "440px",
                     backgroundColor: "#ffffff",
                     borderRadius: "20px",
                     padding: "35px",
@@ -62,9 +59,9 @@ function LoginPage() {
                 }}
             >
                 <div style={{ textAlign: "center", marginBottom: "25px" }}>
-                    <h1 style={{ margin: 0, color: "#1e293b" }}>4 Pics 1 Word</h1>
+                    <h1 style={{ margin: 0, color: "#1e293b" }}>Create Account</h1>
                     <p style={{ color: "#64748b", marginTop: "8px" }}>
-                        Login to continue
+                        Register for 4 Pics 1 Word
                     </p>
                 </div>
 
@@ -96,7 +93,7 @@ function LoginPage() {
                         width: "100%",
                         padding: "12px",
                         marginTop: "8px",
-                        marginBottom: "20px",
+                        marginBottom: "16px",
                         borderRadius: "10px",
                         border: "1px solid #cbd5e1",
                         outline: "none",
@@ -104,8 +101,28 @@ function LoginPage() {
                     }}
                 />
 
+                <label style={{ fontWeight: "600", color: "#334155" }}>Role</label>
+                <select
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                    style={{
+                        width: "100%",
+                        padding: "12px",
+                        marginTop: "8px",
+                        marginBottom: "20px",
+                        borderRadius: "10px",
+                        border: "1px solid #cbd5e1",
+                        outline: "none",
+                        boxSizing: "border-box",
+                        backgroundColor: "white"
+                    }}
+                >
+                    <option value="player">Player</option>
+                    <option value="admin">Admin</option>
+                </select>
+
                 <button
-                    onClick={handleLogin}
+                    onClick={handleRegister}
                     onMouseEnter={(e) => {
                         e.currentTarget.style.opacity = "0.9";
                     }}
@@ -125,7 +142,7 @@ function LoginPage() {
                         transition: "0.2s"
                     }}
                 >
-                    Login
+                    Register
                 </button>
 
                 {result && (
@@ -133,7 +150,7 @@ function LoginPage() {
                         style={{
                             marginTop: "15px",
                             textAlign: "center",
-                            color: "#dc2626",
+                            color: result.includes("successful") ? "#16a34a" : "#dc2626",
                             fontWeight: "500"
                         }}
                     >
@@ -148,16 +165,16 @@ function LoginPage() {
                         color: "#64748b"
                     }}
                 >
-                    Don&apos;t have an account?{" "}
+                    Already have an account?{" "}
                     <Link
-                        to="/register"
+                        to="/"
                         style={{
                             color: "#2563eb",
                             textDecoration: "none",
                             fontWeight: "600"
                         }}
                     >
-                        Register
+                        Login
                     </Link>
                 </p>
             </div>
@@ -165,4 +182,4 @@ function LoginPage() {
     );
 }
 
-export default LoginPage;
+export default RegisterPage;
