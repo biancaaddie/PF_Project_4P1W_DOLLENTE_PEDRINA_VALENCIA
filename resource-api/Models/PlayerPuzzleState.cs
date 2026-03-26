@@ -5,5 +5,6 @@ namespace resource_api.Models
         public int Id { get; set; }
         public int PuzzleId { get; set; }
         public bool Solved { get; set; }
+        public DateTime? SolvedAtUtc { get; set; }
     }
 }

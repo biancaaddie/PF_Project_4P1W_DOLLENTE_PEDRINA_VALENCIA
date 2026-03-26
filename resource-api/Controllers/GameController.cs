@@ -28,6 +28,7 @@ namespace resource_api.Controllers
             }
 
             var progress = await _context.PlayerProgress.FirstOrDefaultAsync();
+
             if (progress == null)
             {
                 progress = new PlayerProgress
@@ -59,7 +60,8 @@ namespace resource_api.Controllers
                     existingState = new PlayerPuzzleState
                     {
                         PuzzleId = puzzle.Id,
-                        Solved = true
+                        Solved = true,
+                        SolvedAtUtc = DateTime.UtcNow
                     };
 
                     _context.PlayerPuzzleStates.Add(existingState);
@@ -70,6 +72,7 @@ namespace resource_api.Controllers
                 else if (!existingState.Solved)
                 {
                     existingState.Solved = true;
+                    existingState.SolvedAtUtc = DateTime.UtcNow;
                     progress.Solved += 1;
                     progress.Score += 10;
                     scoreDelta = 10;
@@ -94,6 +97,40 @@ namespace resource_api.Controllers
                 totalSolved = progress.Solved,
                 totalAttempts = progress.Attempts,
                 totalScore = progress.Score
+            });
+        }
+
+        [HttpPost("restart")]
+        public async Task<IActionResult> RestartPack([FromQuery] int packId)
+        {
+            var puzzleIds = await _context.Puzzles
+                .Where(p => p.PackId == packId)
+                .Select(p => p.Id)
+                .ToListAsync();
+
+            var statesToRemove = await _context.PlayerPuzzleStates
+                .Where(s => puzzleIds.Contains(s.PuzzleId))
+                .ToListAsync();
+
+            if (statesToRemove.Any())
+            {
+                _context.PlayerPuzzleStates.RemoveRange(statesToRemove);
+            }
+
+            var progress = await _context.PlayerProgress.FirstOrDefaultAsync();
+            if (progress != null)
+            {
+                progress.Solved = 0;
+                progress.Attempts = 0;
+                progress.Score = 0;
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "Pack restarted.",
+                packId = packId
             });
         }
 

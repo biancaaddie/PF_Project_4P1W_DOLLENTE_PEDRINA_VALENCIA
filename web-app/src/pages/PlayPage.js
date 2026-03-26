@@ -12,6 +12,7 @@ function PlayPage() {
     const [score, setScore] = useState(0);
     const [finished, setFinished] = useState(false);
     const [puzzleNumber, setPuzzleNumber] = useState(1);
+    const [restarting, setRestarting] = useState(false);
 
     const handleLogout = () => {
         localStorage.removeItem("token");
@@ -89,6 +90,36 @@ function PlayPage() {
             });
     };
 
+    const handleRestartPack = () => {
+        setRestarting(true);
+
+        fetch(`http://localhost:5021/api/Game/restart?packId=${packId}`, {
+            method: "POST"
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error("Failed to restart pack");
+                }
+                return response.json();
+            })
+            .then(() => {
+                setFinished(false);
+                setPuzzle(null);
+                setFeedback("");
+                setGuess("");
+                setScore(0);
+                setPuzzleNumber(1);
+                loadNextPuzzle();
+            })
+            .catch((error) => {
+                console.error("Error restarting pack:", error);
+                setFeedback("Failed to restart pack.");
+            })
+            .finally(() => {
+                setRestarting(false);
+            });
+    };
+
     if (loading) {
         return (
             <div style={{ minHeight: "100vh", backgroundColor: "#f1f5f9", padding: "40px" }}>
@@ -161,12 +192,18 @@ function PlayPage() {
                             Current Total Score: <strong>{score}</strong>
                         </p>
 
-                        <button
-                            onClick={() => navigate("/packs")}
-                            style={primaryButton}
-                        >
-                            Back to Packs
-                        </button>
+                        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                            <button onClick={handleRestartPack} style={primaryButton} disabled={restarting}>
+                                {restarting ? "Restarting..." : "Restart Pack"}
+                            </button>
+
+                            <button
+                                onClick={() => navigate("/packs")}
+                                style={secondaryButton}
+                            >
+                                Choose Different Pack
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -342,6 +379,16 @@ const primaryButton = {
     borderRadius: "10px",
     background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
     color: "white",
+    fontWeight: "700",
+    cursor: "pointer"
+};
+
+const secondaryButton = {
+    padding: "12px 18px",
+    border: "none",
+    borderRadius: "10px",
+    backgroundColor: "#e2e8f0",
+    color: "#1e293b",
     fontWeight: "700",
     cursor: "pointer"
 };

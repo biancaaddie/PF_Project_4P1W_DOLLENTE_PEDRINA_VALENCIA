@@ -20,13 +20,31 @@ namespace resource_api.Controllers
         {
             var progress = await _context.PlayerProgress.FirstOrDefaultAsync();
 
+            var recentPuzzles = await _context.PlayerPuzzleStates
+                .Where(x => x.Solved && x.SolvedAtUtc != null)
+                .OrderByDescending(x => x.SolvedAtUtc)
+                .Join(
+                    _context.Puzzles,
+                    state => state.PuzzleId,
+                    puzzle => puzzle.Id,
+                    (state, puzzle) => new
+                    {
+                        puzzleId = puzzle.Id,
+                        answer = puzzle.Answer,
+                        solvedAtUtc = state.SolvedAtUtc
+                    }
+                )
+                .Take(5)
+                .ToListAsync();
+
             if (progress == null)
             {
                 return Ok(new
                 {
                     solved = 0,
                     attempts = 0,
-                    score = 0
+                    score = 0,
+                    recentPuzzles = new object[] { }
                 });
             }
 
@@ -34,7 +52,8 @@ namespace resource_api.Controllers
             {
                 solved = progress.Solved,
                 attempts = progress.Attempts,
-                score = progress.Score
+                score = progress.Score,
+                recentPuzzles = recentPuzzles
             });
         }
     }
