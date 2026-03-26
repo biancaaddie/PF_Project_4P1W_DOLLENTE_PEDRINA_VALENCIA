@@ -1,8 +1,17 @@
+import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
 function ProfilePage() {
-    const email = localStorage.getItem("email");
-    const role = localStorage.getItem("role");
+    const email = localStorage.getItem("email") || "player@gmail.com";
+    const role = localStorage.getItem("role") || "player";
+
+    const [progress, setProgress] = useState({
+        solved: 0,
+        attempts: 0,
+        score: 0
+    });
+
+    const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
     const handleLogout = () => {
@@ -12,12 +21,18 @@ function ProfilePage() {
         navigate("/");
     };
 
-    const profileData = {
-        solved: 12,
-        attempts: 20,
-        score: 95,
-        recentPuzzles: ["Cat", "Apple", "School", "Beach"]
-    };
+    useEffect(() => {
+        fetch("http://localhost:5021/api/Profile/progress")
+            .then((response) => response.json())
+            .then((data) => {
+                setProgress(data);
+                setLoading(false);
+            })
+            .catch((error) => {
+                console.error("Error loading profile progress:", error);
+                setLoading(false);
+            });
+    }, []);
 
     return (
         <div style={{ minHeight: "100vh", backgroundColor: "#f1f5f9" }}>
@@ -83,54 +98,41 @@ function ProfilePage() {
                 >
                     <h1 style={{ marginTop: 0, color: "#1e293b" }}>Player Profile</h1>
                     <p style={{ color: "#64748b" }}>
-                        Track your progress and recent puzzles
+                        Track your gameplay progress
                     </p>
                 </div>
 
-                <div
-                    style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                        gap: "20px",
-                        marginBottom: "25px"
-                    }}
-                >
-                    <div style={cardStyle("#dbeafe")}>
-                        <h3>Solved</h3>
-                        <p style={valueStyle}>{profileData.solved}</p>
-                    </div>
+                {loading ? (
+                    <p>Loading profile...</p>
+                ) : (
+                    <div
+                        style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                            gap: "20px"
+                        }}
+                    >
+                        <div style={cardStyle("#dbeafe")}>
+                            <h3>Solved</h3>
+                            <p style={valueStyle}>{progress.solved}</p>
+                        </div>
 
-                    <div style={cardStyle("#dcfce7")}>
-                        <h3>Attempts</h3>
-                        <p style={valueStyle}>{profileData.attempts}</p>
-                    </div>
+                        <div style={cardStyle("#dcfce7")}>
+                            <h3>Attempts</h3>
+                            <p style={valueStyle}>{progress.attempts}</p>
+                        </div>
 
-                    <div style={cardStyle("#fef3c7")}>
-                        <h3>Score</h3>
-                        <p style={valueStyle}>{profileData.score}</p>
-                    </div>
+                        <div style={cardStyle("#fef3c7")}>
+                            <h3>Score</h3>
+                            <p style={valueStyle}>{progress.score}</p>
+                        </div>
 
-                    <div style={cardStyle("#f3e8ff")}>
-                        <h3>Role</h3>
-                        <p style={valueStyle}>{role}</p>
+                        <div style={cardStyle("#f3e8ff")}>
+                            <h3>Role</h3>
+                            <p style={valueStyle}>{role}</p>
+                        </div>
                     </div>
-                </div>
-
-                <div
-                    style={{
-                        backgroundColor: "white",
-                        borderRadius: "18px",
-                        padding: "24px",
-                        boxShadow: "0 8px 24px rgba(0,0,0,0.06)"
-                    }}
-                >
-                    <h2 style={{ marginTop: 0 }}>Recent Puzzles</h2>
-                    <ul style={{ color: "#475569", lineHeight: "1.9" }}>
-                        {profileData.recentPuzzles.map((item, index) => (
-                            <li key={index}>{item}</li>
-                        ))}
-                    </ul>
-                </div>
+                )}
             </div>
         </div>
     );

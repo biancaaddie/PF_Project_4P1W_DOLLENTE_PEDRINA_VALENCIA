@@ -2,13 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
 function PacksPage() {
-    const email = localStorage.getItem("email");
-    const role = localStorage.getItem("role");
-    const navigate = useNavigate();
-
     const [packs, setPacks] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
+    const navigate = useNavigate();
 
     const handleLogout = () => {
         localStorage.removeItem("token");
@@ -19,49 +15,19 @@ function PacksPage() {
 
     useEffect(() => {
         fetch("http://localhost:5021/api/Packs?random=true")
-            .then((res) => {
-                if (!res.ok) {
-                    throw new Error("Failed to fetch packs");
-                }
-                return res.json();
-            })
+            .then((response) => response.json())
             .then((data) => {
                 setPacks(data);
                 setLoading(false);
             })
-            .catch((err) => {
-                console.error(err);
-                setError("Could not load packs from the server.");
+            .catch((error) => {
+                console.error("Error fetching packs:", error);
                 setLoading(false);
             });
     }, []);
 
-    const cardStyle = {
-        backgroundColor: "white",
-        borderRadius: "16px",
-        padding: "22px",
-        boxShadow: "0 6px 18px rgba(0,0,0,0.05)",
-        transition: "0.2s",
-        cursor: "pointer"
-    };
-
-    const hoverIn = (e) => {
-        e.currentTarget.style.transform = "translateY(-5px)";
-        e.currentTarget.style.boxShadow = "0 12px 30px rgba(0,0,0,0.1)";
-    };
-
-    const hoverOut = (e) => {
-        e.currentTarget.style.transform = "translateY(0)";
-        e.currentTarget.style.boxShadow = "0 6px 18px rgba(0,0,0,0.05)";
-    };
-
     return (
-        <div
-            style={{
-                minHeight: "100vh",
-                backgroundColor: "#f1f5f9"
-            }}
-        >
+        <div style={{ minHeight: "100vh", backgroundColor: "#f1f5f9" }}>
             <div
                 style={{
                     backgroundColor: "#1d4ed8",
@@ -76,11 +42,11 @@ function PacksPage() {
                 <div>
                     <h2 style={{ margin: 0 }}>4 Pics 1 Word</h2>
                     <p style={{ margin: "5px 0 0", opacity: 0.9 }}>
-                        Welcome, {email}
+                        Choose a Pack
                     </p>
                 </div>
 
-                <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                <div style={{ display: "flex", gap: "12px" }}>
                     <Link
                         to="/profile"
                         style={{
@@ -112,13 +78,7 @@ function PacksPage() {
                 </div>
             </div>
 
-            <div
-                style={{
-                    maxWidth: "1100px",
-                    margin: "40px auto",
-                    padding: "0 20px"
-                }}
-            >
+            <div style={{ maxWidth: "1100px", margin: "40px auto", padding: "0 20px" }}>
                 <div
                     style={{
                         backgroundColor: "white",
@@ -128,67 +88,45 @@ function PacksPage() {
                         marginBottom: "25px"
                     }}
                 >
-                    <h1 style={{ marginTop: 0, color: "#1e293b" }}>Choose a Pack</h1>
+                    <h1 style={{ marginTop: 0, color: "#1e293b" }}>Available Packs</h1>
                     <p style={{ color: "#64748b" }}>
-                        Role: {role} • Select a randomized published pack and start playing
+                        Pick a published pack and start playing
                     </p>
                 </div>
 
-                {loading && (
-                    <div
-                        style={{
-                            backgroundColor: "white",
-                            borderRadius: "16px",
-                            padding: "24px",
-                            boxShadow: "0 6px 18px rgba(0,0,0,0.05)"
-                        }}
-                    >
-                        Loading packs...
-                    </div>
-                )}
-
-                {error && (
-                    <div
-                        style={{
-                            backgroundColor: "white",
-                            borderRadius: "16px",
-                            padding: "24px",
-                            boxShadow: "0 6px 18px rgba(0,0,0,0.05)",
-                            color: "#dc2626"
-                        }}
-                    >
-                        {error}
-                    </div>
-                )}
-
-                {!loading && !error && (
+                {loading ? (
+                    <p>Loading packs...</p>
+                ) : packs.length === 0 ? (
+                    <p>No packs found.</p>
+                ) : (
                     <div
                         style={{
                             display: "grid",
-                            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
                             gap: "20px"
                         }}
                     >
                         {packs.map((pack) => (
                             <div
                                 key={pack.id}
-                                style={cardStyle}
-                                onMouseEnter={hoverIn}
-                                onMouseLeave={hoverOut}
+                                style={{
+                                    backgroundColor: "white",
+                                    borderRadius: "18px",
+                                    padding: "22px",
+                                    boxShadow: "0 8px 24px rgba(0,0,0,0.06)"
+                                }}
                             >
-                                <h3 style={{ marginTop: 0, color: "#1e293b" }}>{pack.name}</h3>
-                                <p style={{ color: "#64748b", minHeight: "45px" }}>
-                                    {pack.description}
-                                </p>
-                                <p style={{ color: "#475569", marginBottom: "14px" }}>
-                                    Difficulty: {pack.difficulty}
+                                <h2 style={{ marginTop: 0, color: "#1e293b" }}>{pack.name}</h2>
+                                <p style={{ color: "#475569" }}>{pack.description}</p>
+                                <p style={{ color: "#64748b" }}>
+                                    Difficulty: <strong>{pack.difficulty}</strong>
                                 </p>
 
                                 <button
                                     onClick={() => navigate(`/play/${pack.id}`)}
                                     style={{
-                                        width: "100%",
-                                        padding: "12px",
+                                        marginTop: "10px",
+                                        padding: "12px 18px",
                                         border: "none",
                                         borderRadius: "10px",
                                         background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
