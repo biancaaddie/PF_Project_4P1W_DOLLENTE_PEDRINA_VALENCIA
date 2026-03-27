@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using resource_api.Data;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace resource_api.Controllers
 {
@@ -16,8 +17,14 @@ namespace resource_api.Controllers
         }
 
         [HttpGet("next")]
+        [EnableRateLimiting("public-read")]
         public async Task<IActionResult> GetNextPuzzle([FromQuery] int packId)
         {
+            if (packId <= 0)
+            {
+                return BadRequest(new { message = "packId must be greater than 0." });
+            }
+
             var solvedPuzzleIds = await _context.PlayerPuzzleStates
                 .Where(x => x.Solved)
                 .Select(x => x.PuzzleId)

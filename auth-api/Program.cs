@@ -4,6 +4,8 @@ using auth_api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Threading.RateLimiting;
+using auth_api.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,6 +36,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddFixedWindowLimiter("auth", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 20;
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueLimit = 0;
+    });
+});
 
 builder.Services.AddCors(options =>
 {
@@ -47,6 +59,21 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+    context.Database.EnsureCreated();
+
+    if (!context.Users.Any())
+    {
+        context.Users.AddRange(
+            new User { Email = "player@4pics.dev", Password = "Player123!", Role = "player" },
+            new User { Email = "admin@4pics.dev", Password = "Admin123!", Role = "admin" }
+        );
+        context.SaveChanges();
+    }
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -54,6 +81,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowReactApp");
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();

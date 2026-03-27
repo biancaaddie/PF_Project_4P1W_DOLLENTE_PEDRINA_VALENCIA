@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using resource_api.Data;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace resource_api.Controllers
 {
@@ -16,6 +17,7 @@ namespace resource_api.Controllers
         }
 
         [HttpGet]
+        [EnableRateLimiting("public-read")]
         public async Task<IActionResult> GetPacks([FromQuery] bool random = false)
         {
             var packs = await _context.Packs

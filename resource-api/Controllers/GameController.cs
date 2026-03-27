@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using resource_api.Data;
 using resource_api.Dtos;
 using resource_api.Models;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace resource_api.Controllers
 {
@@ -18,6 +19,7 @@ namespace resource_api.Controllers
         }
 
         [HttpPost("submit")]
+        [EnableRateLimiting("guess-submit")]
         public async Task<IActionResult> SubmitGuess([FromBody] SubmitGuessRequest request)
         {
             var puzzle = await _context.Puzzles.FirstOrDefaultAsync(p => p.Id == request.PuzzleId);
@@ -103,6 +105,11 @@ namespace resource_api.Controllers
         [HttpPost("restart")]
         public async Task<IActionResult> RestartPack([FromQuery] int packId)
         {
+            if (packId <= 0)
+            {
+                return BadRequest(new { message = "packId must be greater than 0." });
+            }
+
             var puzzleIds = await _context.Puzzles
                 .Where(p => p.PackId == packId)
                 .Select(p => p.Id)

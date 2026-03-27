@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using resource_api.Data;
 using resource_api.Models;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +34,24 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddFixedWindowLimiter("public-read", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 120;
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueLimit = 0;
+    });
+
+    options.AddFixedWindowLimiter("guess-submit", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 25;
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueLimit = 0;
+    });
+});
 
 builder.Services.AddCors(options =>
 {
@@ -51,7 +70,6 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ResourceDbContext>();
 
-    context.Database.EnsureDeleted();
     context.Database.EnsureCreated();
 
     if (!context.Packs.Any())
@@ -202,6 +220,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowReactApp");
+app.UseRateLimiter();
 
 app.UseStaticFiles(); // serve uploaded images from wwwroot (dev-friendly)
 
