@@ -6,9 +6,19 @@ function RegisterPage() {
     const [password, setPassword] = useState("");
     const [role, setRole] = useState("player");
     const [result, setResult] = useState("");
+    const [submitting, setSubmitting] = useState(false);
     const navigate = useNavigate();
 
     const handleRegister = async () => {
+        const normalizedEmail = email.trim();
+        if (!normalizedEmail || !password || submitting) {
+            setResult("Please fill in all required fields.");
+            return;
+        }
+
+        setSubmitting(true);
+        setResult("");
+
         try {
             const response = await fetch("http://localhost:5151/api/Auth/register", {
                 method: "POST",
@@ -16,13 +26,13 @@ function RegisterPage() {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    email,
+                    email: normalizedEmail,
                     password,
                     role
                 })
             });
 
-            const data = await response.json();
+            const data = await response.json().catch(() => ({}));
 
             if (response.ok) {
                 setResult("Registration successful! Redirecting to login...");
@@ -34,6 +44,8 @@ function RegisterPage() {
             }
         } catch (error) {
             setResult("Error connecting to server");
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -141,8 +153,9 @@ function RegisterPage() {
                         cursor: "pointer",
                         transition: "0.2s"
                     }}
+                    disabled={submitting}
                 >
-                    Register
+                    {submitting ? "Creating account..." : "Register"}
                 </button>
 
                 {result && (

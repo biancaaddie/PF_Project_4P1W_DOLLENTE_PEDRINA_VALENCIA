@@ -5,9 +5,19 @@ function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [result, setResult] = useState("");
+    const [submitting, setSubmitting] = useState(false);
     const navigate = useNavigate();
 
     const handleLogin = async () => {
+        const normalizedEmail = email.trim();
+        if (!normalizedEmail || !password || submitting) {
+            setResult("Please enter both email and password.");
+            return;
+        }
+
+        setSubmitting(true);
+        setResult("");
+
         try {
             const response = await fetch("http://localhost:5151/api/Auth/login", {
                 method: "POST",
@@ -15,12 +25,12 @@ function LoginPage() {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    email,
+                    email: normalizedEmail,
                     password
                 })
             });
 
-            const data = await response.json();
+            const data = await response.json().catch(() => ({}));
 
             if (response.ok) {
                 localStorage.setItem("token", data.token);
@@ -37,6 +47,8 @@ function LoginPage() {
             }
         } catch (error) {
             setResult("Error connecting to server");
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -124,8 +136,9 @@ function LoginPage() {
                         cursor: "pointer",
                         transition: "0.2s"
                     }}
+                    disabled={submitting}
                 >
-                    Login
+                    {submitting ? "Signing in..." : "Login"}
                 </button>
 
                 {result && (

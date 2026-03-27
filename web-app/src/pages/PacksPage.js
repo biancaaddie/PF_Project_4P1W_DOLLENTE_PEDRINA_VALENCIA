@@ -4,6 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 function PacksPage() {
     const [packs, setPacks] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
     const navigate = useNavigate();
 
     const handleLogout = () => {
@@ -14,14 +15,24 @@ function PacksPage() {
     };
 
     useEffect(() => {
+        setLoading(true);
+        setError("");
+
         fetch("http://localhost:5021/api/Packs?random=true")
-            .then((response) => response.json())
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error("Failed to load packs.");
+                }
+
+                return response.json();
+            })
             .then((data) => {
                 setPacks(data);
                 setLoading(false);
             })
-            .catch((error) => {
-                console.error("Error fetching packs:", error);
+            .catch((fetchError) => {
+                console.error("Error fetching packs:", fetchError);
+                setError("Could not load packs right now. Please try again.");
                 setLoading(false);
             });
     }, []);
@@ -96,6 +107,24 @@ function PacksPage() {
 
                 {loading ? (
                     <p>Loading packs...</p>
+                ) : error ? (
+                    <div>
+                        <p style={{ color: "#b91c1c", fontWeight: "700", marginBottom: "10px" }}>{error}</p>
+                        <button
+                            onClick={() => window.location.reload()}
+                            style={{
+                                padding: "10px 14px",
+                                borderRadius: "10px",
+                                border: "none",
+                                backgroundColor: "#e2e8f0",
+                                color: "#1e293b",
+                                fontWeight: "700",
+                                cursor: "pointer"
+                            }}
+                        >
+                            Retry
+                        </button>
+                    </div>
                 ) : packs.length === 0 ? (
                     <p>No packs found.</p>
                 ) : (

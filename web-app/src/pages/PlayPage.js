@@ -13,6 +13,8 @@ function PlayPage() {
     const [finished, setFinished] = useState(false);
     const [puzzleNumber, setPuzzleNumber] = useState(1);
     const [restarting, setRestarting] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [pageError, setPageError] = useState("");
 
     const handleLogout = () => {
         localStorage.removeItem("token");
@@ -25,6 +27,7 @@ function PlayPage() {
         setLoading(true);
         setFeedback("");
         setGuess("");
+        setPageError("");
 
         fetch(`http://localhost:5021/api/Puzzles/next?packId=${packId}`)
             .then((response) => {
@@ -38,10 +41,11 @@ function PlayPage() {
                 setFinished(false);
                 setLoading(false);
             })
-            .catch((error) => {
-                console.error("Error loading next puzzle:", error);
+            .catch((loadError) => {
+                console.error("Error loading next puzzle:", loadError);
                 setPuzzle(null);
                 setFinished(true);
+                setPageError("No more puzzles available in this pack right now.");
                 setLoading(false);
             });
     };
@@ -53,7 +57,10 @@ function PlayPage() {
     }, [packId]);
 
     const handleSubmit = () => {
-        if (!puzzle) return;
+        const normalizedGuess = guess.trim();
+        if (!puzzle || !normalizedGuess || submitting) return;
+        setSubmitting(true);
+        setFeedback("");
 
         fetch("http://localhost:5021/api/Game/submit", {
             method: "POST",
@@ -62,13 +69,20 @@ function PlayPage() {
             },
             body: JSON.stringify({
                 puzzleId: puzzle.id,
-                guess: guess
+                guess: normalizedGuess
             })
         })
-            .then((response) => response.json())
+            .then(async (response) => {
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.message || "Failed to submit guess.");
+                }
+
+                return data;
+            })
             .then((data) => {
                 if (data.correct) {
-                    setFeedback("? Correct! Score +10");
+                    setFeedback("Correct! Score +10");
                     setScore(data.totalScore);
 
                     setTimeout(() => {
@@ -81,12 +95,15 @@ function PlayPage() {
                         }
                     }, 900);
                 } else {
-                    setFeedback("? Incorrect. Try again.");
+                    setFeedback("Incorrect. Try again.");
                 }
             })
-            .catch((error) => {
-                console.error("Error submitting guess:", error);
-                setFeedback("Something went wrong.");
+            .catch((submitError) => {
+                console.error("Error submitting guess:", submitError);
+                setFeedback(submitError.message || "Something went wrong.");
+            })
+            .finally(() => {
+                setSubmitting(false);
             });
     };
 
@@ -111,8 +128,8 @@ function PlayPage() {
                 setPuzzleNumber(1);
                 loadNextPuzzle();
             })
-            .catch((error) => {
-                console.error("Error restarting pack:", error);
+            .catch((restartError) => {
+                console.error("Error restarting pack:", restartError);
                 setFeedback("Failed to restart pack.");
             })
             .finally(() => {
@@ -188,6 +205,7 @@ function PlayPage() {
                         }}
                     >
                         <h2>Pack Finished</h2>
+                        {pageError && <p style={{ color: "#475569" }}>{pageError}</p>}
                         <p style={{ fontSize: "18px", marginBottom: "20px" }}>
                             Current Total Score: <strong>{score}</strong>
                         </p>
@@ -340,6 +358,11 @@ function PlayPage() {
                         placeholder="Type your guess"
                         value={guess}
                         onChange={(e) => setGuess(e.target.value)}
+                        onKeyDown={(event) => {
+                            if (event.key === "Enter") {
+                                handleSubmit();
+                            }
+                        }}
                         style={{
                             width: "100%",
                             padding: "12px",
@@ -351,8 +374,12 @@ function PlayPage() {
                     />
 
                     <div style={{ display: "flex", gap: "12px" }}>
-                        <button onClick={handleSubmit} style={primaryButton}>
-                            Submit Guess
+                        <button
+                            onClick={handleSubmit}
+                            style={primaryButton}
+                            disabled={submitting || guess.trim().length === 0}
+                        >
+                            {submitting ? "Submitting..." : "Submit Guess"}
                         </button>
                     </div>
 

@@ -13,6 +13,7 @@ function ProfilePage() {
     });
 
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
     const navigate = useNavigate();
 
     const handleLogout = () => {
@@ -23,14 +24,24 @@ function ProfilePage() {
     };
 
     useEffect(() => {
+        setLoading(true);
+        setError("");
+
         fetch("http://localhost:5021/api/Profile/progress")
-            .then((response) => response.json())
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error("Failed to load profile.");
+                }
+
+                return response.json();
+            })
             .then((data) => {
                 setProgress(data);
                 setLoading(false);
             })
-            .catch((error) => {
-                console.error("Error loading profile progress:", error);
+            .catch((fetchError) => {
+                console.error("Error loading profile progress:", fetchError);
+                setError("Could not load profile data right now.");
                 setLoading(false);
             });
     }, []);
@@ -105,6 +116,8 @@ function ProfilePage() {
 
                 {loading ? (
                     <p>Loading profile...</p>
+                ) : error ? (
+                    <p style={{ color: "#b91c1c", fontWeight: "700" }}>{error}</p>
                 ) : (
                     <>
                         <div

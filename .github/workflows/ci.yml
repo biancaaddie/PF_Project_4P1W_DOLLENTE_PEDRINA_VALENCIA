@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore auth-api
+        run: dotnet restore auth-api/auth-api.csproj
+
+      - name: Build auth-api
+        run: dotnet build auth-api/auth-api.csproj --configuration Release --no-restore
+
+      - name: Restore resource-api
+        run: dotnet restore resource-api/resource-api.csproj
+
+      - name: Build resource-api
+        run: dotnet build resource-api/resource-api.csproj --configuration Release --no-restore
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: web-app/package-lock.json
+
+      - name: Install web-app deps
+        run: npm ci
+        working-directory: web-app
+
+      - name: Test web-app
+        run: npm test -- --watchAll=false
+        working-directory: web-app
+        env:
+          CI: "true"
+
+      - name: Build web-app
+        run: npm run build
+        working-directory: web-app
