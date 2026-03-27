@@ -154,6 +154,7 @@ function AdminPage() {
                     </div>
 
                     <div
+                        onClick={() => navigate("/admin/packs")}
                         onMouseEnter={hoverIn}
                         onMouseLeave={hoverOut}
                         style={{

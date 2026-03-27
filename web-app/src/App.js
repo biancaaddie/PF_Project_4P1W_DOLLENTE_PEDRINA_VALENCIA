@@ -8,6 +8,8 @@ import PlayPage from "./pages/PlayPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminImagesPage from "./pages/AdminImagesPage";
 import AdminTagsPage from "./pages/AdminTagsPage";
+import AdminPacksPage from "./pages/AdminPacksPage";
+import AdminPuzzlesPage from "./pages/AdminPuzzlesPage";
 
 function App() {
     return (
@@ -66,6 +68,24 @@ function App() {
                     element={
                         <ProtectedRoute allowedRole="admin">
                             <AdminTagsPage />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/admin/packs"
+                    element={
+                        <ProtectedRoute allowedRole="admin">
+                            <AdminPacksPage />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/admin/puzzles"
+                    element={
+                        <ProtectedRoute allowedRole="admin">
+                            <AdminPuzzlesPage />
                         </ProtectedRoute>
                     }
                 />
