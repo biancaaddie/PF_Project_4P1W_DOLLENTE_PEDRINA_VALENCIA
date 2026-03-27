@@ -128,6 +128,7 @@ function AdminPage() {
                     }}
                 >
                     <div
+                        onClick={() => navigate("/admin/images")}
                         onMouseEnter={hoverIn}
                         onMouseLeave={hoverOut}
                         style={{
@@ -140,6 +141,7 @@ function AdminPage() {
                     </div>
 
                     <div
+                        onClick={() => navigate("/admin/tags")}
                         onMouseEnter={hoverIn}
                         onMouseLeave={hoverOut}
                         style={{
@@ -147,8 +149,8 @@ function AdminPage() {
                             backgroundColor: "#dcfce7"
                         }}
                     >
-                        <h3 style={{ marginTop: 0 }}>Puzzles</h3>
-                        <p>Create and organize puzzle content.</p>
+                        <h3 style={{ marginTop: 0 }}>Tags</h3>
+                        <p>Create and manage image tags.</p>
                     </div>
 
                     <div

@@ -6,6 +6,8 @@ import AdminPage from "./pages/AdminPage";
 import ProfilePage from "./pages/ProfilePage";
 import PlayPage from "./pages/PlayPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminImagesPage from "./pages/AdminImagesPage";
+import AdminTagsPage from "./pages/AdminTagsPage";
 
 function App() {
     return (
@@ -46,6 +48,24 @@ function App() {
                     element={
                         <ProtectedRoute allowedRole="admin">
                             <AdminPage />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/admin/images"
+                    element={
+                        <ProtectedRoute allowedRole="admin">
+                            <AdminImagesPage />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/admin/tags"
+                    element={
+                        <ProtectedRoute allowedRole="admin">
+                            <AdminTagsPage />
                         </ProtectedRoute>
                     }
                 />
